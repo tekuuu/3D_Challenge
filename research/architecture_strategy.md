@@ -42,9 +42,9 @@ graph TD
     Judge -.->|4. Escalate| User
 
     %% Styling for clarity
-    style User fill:#f9f,stroke:#333,stroke-width:2px
-    style Judge fill:#fff4dd,stroke:#d4a017,stroke-width:2px
-    style Planner fill:#d1e8ff,stroke:#0056b3,stroke-width:2px
+    style User fill:#f,stroke:#333,stroke-width:2px
+    style Judge fill:#fff4d,stroke:#d4a017,stroke-width:2px
+    style Planner fill:#ff,stroke:#0056b3,stroke-width:2px
 ```
 
 ---
@@ -95,5 +95,5 @@ graph LR
     Host <-->|MCP Protocol| W
     Host <-->|MCP Protocol| S
     
-    style Host fill:#d1e8ff,stroke:#0056b3,stroke-width:2px
+    style Host fill:#d,stroke:#0056b3,stroke-width:2px
 ```
