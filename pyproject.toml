@@ -1,0 +1,18 @@
+[project]
+name = "project-chimera"
+version = "0.1.0"
+description = "Autonomous Influencer Network"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=0.1.0",              # Essential for MCP Server connectivity
+    "pydantic>=2.0.0",         # For Spec-Driven data validation
+    "openai>=1.0.0",           # Primary LLM interface
+    "coinbase-agentkit>=0.1.0", # For Financial Agency/Wallets
+    "weaviate-client",         # For Semantic Memory
+    "python-dotenv",           # To load your .env secrets
+    "pytest",                  # For mandatory TDD (Test-Driven Development)
+]
+
+[tool.uv]
+managed = true
