@@ -13,7 +13,8 @@ The system follows a distributed, event-driven pattern using Redis as a message 
 ## 2. API & Data Contracts
 
 ### 2.1 The Agent Task Schema (Internal)
-All communication between Swarm roles MUST follow this schema.
+All communication between Swarm roles MUST follow these schemas.
+**Implementation Reference**: [schemas/contracts.py](schemas/contracts.py)
 
 ```json
 {
@@ -54,6 +55,45 @@ All communication between Swarm roles MUST follow this schema.
 
 ## 3. Database Schema (ERD)
 
+The system utilizes a hybrid storage strategy to handle high-velocity video metadata and semantic memory.
+
+```mermaid
+erDiagram
+    TENANT ||--o{ AGENT : manages
+    AGENT ||--o{ CAMPAIGN : runs
+    CAMPAIGN ||--o{ TASK : generates
+    TASK ||--o{ AUDIT_LOG : records
+    
+    TENANT {
+        uuid id PK
+        string name
+        string api_key_hash
+    }
+    
+    AGENT {
+        uuid id PK
+        string name
+        string soul_link "path/to/SOUL.md"
+        string wallet_address
+    }
+    
+    CAMPAIGN {
+        uuid id PK
+        string goal_text
+        decimal daily_budget
+        string status "ACTIVE | PAUSED | COMPLETED"
+    }
+
+    TASK {
+        uuid id PK
+        enum type "RESEARCH | CONTENT | FINANCE"
+        jsonb payload
+        float confidence_score
+        uuid current_worker_id
+    }
+}
+```
+
 ### 3.1 PostgreSQL (Transactional)
 *   **Users:** `id (UUID), email (String), role (Enum: OPERATOR, MODERATOR)`
 *   **Campaigns:** `id (UUID), owner_id (UUID), goal_text (Text), status (Enum), daily_budget_usd (Decimal)`
@@ -75,6 +115,7 @@ SET status = 'ACTIVE', version_id = new_uuid
 WHERE id = target_id AND version_id = last_known_version;
 ```
 If the update affects 0 rows, the Judge MUST signal a re-sync and retry.
+
 
 ## 5. Security Protocols
 *   **Secrets:** Wallet private keys are NEVER stored in the database. They are injected via environment variables at runtime or fetched from AWS Secrets Manager.
