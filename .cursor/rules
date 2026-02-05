@@ -1,0 +1,21 @@
+# Project Chimera: The Brain Rules
+
+## Project Context
+This is **Project Chimera**, an autonomous influencer infrastructure. We are building the "Factory" that manages a network of sovereign AI agents (Chimeras). These agents use the **Planner-Worker-Judge (FastRender)** swarm pattern to reason and interact with the world via the **Model Context Protocol (MCP)** and **Coinbase AgentKit**.
+
+## The Prime Directive
+**NEVER generate implementation code without checking specs/ first.**
+*   The specifications in `specs/` are the absolute source of truth.
+*   If a task is ambiguous, refer back to `specs/_meta.md` or `specs/functional.md`.
+*   Any code you write MUST be traceable to a specific requirement in the blueprints.
+
+## Traceability & Communication
+*   **Think Before Coding:** ALWAYS explain your plan and which spec you are following before writing a single line of code.
+*   **MCP First:** If you need to interact with the external world (Files, APIs, DBs), check if an MCP server or Tool exists first.
+*   **TDD Focus:** Always consider how the code will be tested. Prefer writing a failing test in `tests/` before implementation.
+*   **SOUL Alignment:** Ensure any agent logic respects the identity and ethical guardrails defined in `specs/SOUL.md`.
+
+## Coding Standards
+*   Use `uv` for all dependency management.
+*   Follow clean code principles and Pydantic for data validation.
+*   Ensure all async operations have proper error handling as defined in `specs/technical.md`.
