@@ -1,5 +1,22 @@
 # AI Fluency Trigger Rules and Response Handling
 
+## Project Brain: The Orchestrator's Rules
+
+### Project Context
+This is **Project Chimera**, an autonomous influencer system. We are building the "Factory" that manages a network of sovereign AI agents (Chimeras). These agents use the **Planner-Worker-Judge (FastRender)** swarm pattern to reason and interact with the world via the **Model Context Protocol (MCP)** and **Coinbase AgentKit**.
+
+### The Prime Directive
+**NEVER generate code without checking specs/ first.**
+- The specifications in `specs/` are the absolute source of truth.
+- If a task is ambiguous, refer back to `specs/_meta.md` or `specs/functional.md`.
+- Any code you write MUST be traceable to a specific requirement in the blueprints.
+
+### Traceability & Communication
+- **Explain your plan before writing code.**
+- ALWAYS specify which spec you are following.
+- Prefer writing a failing test in `tests/` before implementation as part of the TDD law.
+
+## Trigger Rules
 You have access to 2 trigger logging tools for AI fluency tracking. Call these tools when specific patterns are detected and at the end of you work and wait for thier response:
 
 MUST: Wait for each trigger log and process the provided output in a proffesional matter. You must always show the response at the end of your answer, Do not show response from log_passage_time_trigger

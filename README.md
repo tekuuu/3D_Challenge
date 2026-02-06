@@ -1,22 +1,57 @@
-# Project Chimera - Development Status
+# Project Chimera: The Autonomous Influencer Factory
 
-## Completed Tasks
-- [x] **Day 1: The Strategist**
-    - [x] Task 1.1: Deep Research (a16z, OpenClaw, SRS synthesis)
-    - [x] Task 1.2: Architecture Strategy (FastRender Pattern)
-    - [x] Task 1.3: Golden Environment Setup (uv, git, MCP Sense active)
-- [x] **Day 2: The Architect**
-    - [x] Task 2.1: Master Specification (Blueprints: _meta, functional, technical, openclaw)
-    - [x] Task 2.2: Context Engineering (The Brain: .cursor/rules)
-    - [x] Task 2.3: Tooling & Skills Strategy (Dev MCPs vs Runtime Skills)
+**Status**: 🚀 Orchestrator Tier (Day 3 Complete)  
+**Vision**: Building a sovereign fleet of AI agents using the FastRender pattern.
 
-## Architecture Summary
-- **Pattern:** FastRender Swarm (Planner-Worker-Judge)
-- **Tech Stack:** Python, MCP SDK, Coinbase AgentKit, Weaviate, PostgreSQL.
-- **DNA:** `SOUL.md` driven persona management.
+---
 
-## Next Steps
-- **Day 3: The Governor**
-    - [ ] Task 3.1: TDD (Failing Tests for Skills & Trends)
-    - [ ] Task 3.2: Containerization (Dockerfile & Makefile)
-    - [ ] Task 3.3: CI/CD & AI Governance (GitHub Actions & CodeRabbit)
+## 🧠 The Prime Directive
+> **NEVER generate implementation code without checking `specs/` first.**  
+> Specifications in `specs/` are the absolute source of truth. Every line of code must be traceable to a requirement in the blueprints.
+
+---
+
+## 🏛️ Architecture: FastRender Swarm
+Project Chimera utilizes a **Planner-Worker-Judge** swarm pattern to ensure high-fidelity content generation and on-chain accountability.
+
+| Role | Responsibility | Primary Tooling |
+| :--- | :--- | :--- |
+| **Planner** | Strategic Trend Analysis & Task DAG Decomposition | `mcp-server-twitter`, `specify-cli` |
+| **Worker** | Content Synthesis & Action Execution | `skill_content_creator`, `Coinbase AgentKit` |
+| **Judge** | Quality Control, LDNA Alignment & Consensus | `specs/SOUL.md`, Audit Logs |
+
+---
+
+## 🛠️ Tech Stack & Governance
+- **Runtime**: Python 3.12 (Managed via `uv`)
+- **Connectivity**: Model Context Protocol (MCP)
+- **Financials**: Coinbase AgentKit (Base Network)
+- **Storage**: Hybrid (PostgreSQL + Weaviate + Redis)
+- **TDD Engine**: Pytest inside Docker
+- **CI/CD**: GitHub Actions + CodeRabbit Governance
+
+---
+
+## 🚦 Operational Commands
+This project uses a `Makefile` to standardize critical workflows:
+
+```bash
+# Initialize the environment and install dependencies
+make setup
+
+# Run the full TDD test suite inside Docker (Required for CI/CD)
+make test
+
+# Verify code alignment with Pydantic contracts and specifications
+make spec-check
+```
+
+---
+
+## 📜 Development Status
+- [x] **Day 1: The Strategist** (Research & Architecture Strategy)
+- [x] **Day 2: The Architect** (Master Specs, Rule Context & Skills Strategy)
+- [x] **Day 3: The Governor** (Docker, Automations, CI/CD & Failing TDD Tests)
+
+---
+*Standardized via GitHub Spec Kit. Traceability active via Tenx MCP Sense.*

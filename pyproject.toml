@@ -12,7 +12,11 @@ dependencies = [
     "weaviate-client",         # For Semantic Memory
     "python-dotenv",           # To load your .env secrets
     "pytest",                  # For mandatory TDD (Test-Driven Development)
+    "specify-cli",
 ]
 
 [tool.uv]
 managed = true
+
+[tool.uv.sources]
+specify-cli = { git = "https://github.com/github/spec-kit.git" }

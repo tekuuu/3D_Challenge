@@ -1,56 +1,36 @@
 import asyncio
-import uuid
-from typing import List
-from schemas.contracts import AgentTask, SkillTrendInput, SkillWalletInput
-from skills.skill_trend_fetcher import TrendFetcher
-from skills.skill_content_creator import ContentCreator
-from skills.skill_wallet_manager import WalletManager
+import logging
+from agents.planner import Planner
+from agents.worker import Worker
+from agents.judge import Judge
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("CHIMERA-ORCHESTRATOR")
 
 class ChimeraOrchestrator:
     """
-    The 'Brain' of Project Chimera. 
-    Implements the FastRender Swarm Pattern: Planner -> Worker -> Judge.
+    Project Chimera - Fleet Governance System (Day 3: The Governor)
+    This orchestrator enforces the FastRender Swarm Pattern (Planner -> Worker -> Judge).
+    Implementation remains in 'Red Phase' (Failing TDD) until Phase 4.
     """
     
     def __init__(self):
-        self.planner = TrendFetcher()
-        self.worker = ContentCreator()
-        self.judge = WalletManager()
-        self.session_id = uuid.uuid4()
+        self.planner = Planner()
+        self.worker = Worker()
+        self.judge = Judge()
 
-    async def run_campaign_cycle(self, goal: str):
-        print(f"[*] Initializing Campaign Cycle: {self.session_id}")
-        print(f"[!] Goal: {goal}")
-
-        # 1. PLANNER: Identify Trends
-        print("[1] Planner: Fetching market sentiment...")
-        trends = await self.planner.execute(SkillTrendInput(topic=goal, timeframe="24h"))
+    async def run(self):
+        logger.info("Initializing Project Chimera Fleet...")
+        logger.info("Current Mode: GOVERNOR (Day 3)")
+        logger.info("Status: Awaiting implementation of logic (TDD enforced).")
         
-        # 2. WORKER: Generate Content based on Trends
-        print(f"[2] Worker: Synthesizing content for trends: {trends.get('trends', [])}")
-        content_task = AgentTask(
-            task_id=uuid.uuid4(),
-            type="CONTENT_GEN",
-            payload={"source_trends": trends["trends"], "voice": "SOUL.md"},
-            status="IN_PROGRESS"
-        )
-        content_result = await self.worker.execute(content_task)
-
-        # 3. JUDGE: Quality Control & On-Chain Settlement
-        print("[3] Judge: Reviewing content and signing transaction...")
-        judgement = await self.judge.execute(SkillWalletInput(
-            action="SIGN_CONTENT_HASH",
-            payload={"content": content_result["generated_text"]}
-        ))
-
-        if judgement["status"] == "SUCCESS":
-            print("[+] Cycle Complete: Content verified and signed for OpenClaw.")
-        else:
-            print("[-] Cycle Failed: Judge rejected the output.")
+        # In Governor Phase, the actual execution is simulated or triggered via tests.
+        # This prevents 'Vibe Logic' from bypassing the specification-based implementation.
+        pass
 
 async def main():
     orchestrator = ChimeraOrchestrator()
-    await orchestrator.run_campaign_cycle("AI Agent Sovereignty & The Future of Work")
+    await orchestrator.run()
 
 if __name__ == "__main__":
     asyncio.run(main())
