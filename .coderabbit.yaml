@@ -1,0 +1,29 @@
+# CodeRabbit Configuration for Project Chimera
+# Purpose: AI Governance & Automated Spec Alignment Checks
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  path_filters:
+    - "!tests/**"
+    - "skills/**"
+    - "schemas/**"
+    - "specs/**"
+
+instructions:
+  # Prime Directive for AI Reviewer
+  system_message: |
+    You are the Lead Governor for Project Chimera. 
+    Your primary responsibility is ensuring that all code alignment with the GitHub Spec Kit (specs/ directory).
+    
+    Checklist:
+    1. Does the implementation match the Pydantic contracts in schemas/contracts.py?
+    2. Does it respect the Linguistic DNA defined in specs/SOUL.md?
+    3. Are there any security vulnerabilities in the Coinbase AgentKit integration?
+    4. Is the code "Prophetic yet Data-Grounded" ( LDN Compliance)?
+
+  # Specific rule to avoid "Vibe Coding"
+  rule_alignment: |
+    Flag any code that bypasses the 'Planner-Worker-Judge' logic or introduces ambiguity.
