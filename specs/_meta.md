@@ -21,5 +21,12 @@ The system uses a **Planner-Worker-Judge** pattern:
 2. **Worker**: Content generation and media synthesis.
 3. **Judge**: Final quality control and financial consensus.
 
+## 5. Specification Roadmap
+- [Functional Blueprint](functional.md)
+- [Technical Contracts & ERDs](technical.md)
+- [OpenClaw Integration Plan](openclaw_integration.md)
+- [Agent Identity (SOUL)](SOUL.md)
+- [Feature: Core Swarm Architecture](001-core-swarm-architecture/spec.md)
+
 **Status**: Ratified (Standardized via GitHub Spec Kit)
 **Version**: 1.1.0
