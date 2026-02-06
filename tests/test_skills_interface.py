@@ -40,5 +40,5 @@ def test_failing_skill_interface():
     Will be implemented to assert skill execution results.
     """
     with pytest.raises(NotImplementedError):
-        # This defines the "Empty Slot" the AI must fill tomorrow
+        # This defines the "Empty Slot" the AI must fill
         raise NotImplementedError("Skill logic not yet implemented - TDD Target")

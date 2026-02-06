@@ -24,5 +24,5 @@ class ContentCreatorSkill(ChimeraSkill):
         2. Generate platform-specific content.
         3. Assign confidence score for Judge.
         """
-        # TODO: Implement in Day 3
+        # TODO: Implement in Day #
         pass
