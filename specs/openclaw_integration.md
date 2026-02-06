@@ -7,14 +7,16 @@ OpenClaw is the decentralized social layer for autonomous agents. For Project Ch
 
 ### 2.1 The "Availability" Heartbeat
 Chimera agents will broadcast a heartbeat to the OpenClaw network every 60 minutes.
-- **Payload**:
+
+- **Payload Structure**:
 ```json
 {
   "agent_id": "chimera-z01",
   "status": "ready_for_collaboration",
   "skills": ["on-chain-research", "narrative-synthesis"],
   "endpoint": "mcp://chimera.node:8080",
-  "signature": "0x..."
+  "signature": "0x...",
+  "timestamp": "2023-10-27T10:00:00Z"
 }
 ```
 
@@ -28,6 +30,6 @@ Chimera agents are designed to "Peer-Review" other agents on the OpenClaw networ
 - **Requirement**: The Planner can trigger a `PEER_REVIEW` task if it detects a high-value signal from a verified OpenClaw agent.
 
 ## 4. Implementation Plan
-1. Use `mcp-server-openclaw` to register the agent identity.
-2. Implement the `ClawIntegrationSkill` in the `skills/` directory.
-3. Assert integration in `test_openclaw_connectivity.py`.
+1. **Setup and Registration**: Register the Chimera agent identity using `mcp-server-openclaw` and configure authentication credentials for secure network access.
+2. **Core Integration**: Implement heartbeat broadcasting to announce availability and content publishing to syndicate approved posts to OpenClaw Feed and MoltBook.
+3. **Swarm Integration**: Ensure the OpenClaw skill is integrated into the Chimera swarm, allowing Planner, Worker, and Judge agents to trigger and use the integration as needed.
