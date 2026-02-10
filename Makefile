@@ -5,6 +5,10 @@ setup:
 	@echo "[*] Installing dependencies with uv..."
 	uv sync
 
+migrate:
+	@echo "Applying SQL migrations to $${DATABASE_URL:-postgresql://chimera:chimera@localhost:5432/chimera}"
+	psql $${DATABASE_URL:-postgresql://chimera:chimera@localhost:5432/chimera} -f migrations/0001_init.sql
+
 # Run tests in Docker as required by the Challenge Task 3.2
 test:
 	@echo "[*] Building Docker image for Project Chimera..."
