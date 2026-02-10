@@ -2,6 +2,7 @@ from enum import Enum
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, condecimal
 from uuid import UUID, uuid4
+from typing import Union
 from datetime import datetime
 
 class TaskType(str, Enum):
@@ -26,8 +27,8 @@ class AgentTask(BaseModel):
     Executable Schema for Swarm Tasks. 
     Matches specs/technical.md contract.
     """
-    # Allow string IDs for tests and runtime UUIDs; default to uuid4 hex string
-    task_id: str = Field(default_factory=lambda: uuid4().hex)
+    # Accept either a UUID or a string ID; default to a UUID
+    task_id: Union[str, UUID] = Field(default_factory=uuid4)
     parent_goal_id: Optional[str] = None
     type: TaskType
     payload: Dict[str, Any]
