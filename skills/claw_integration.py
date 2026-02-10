@@ -4,6 +4,8 @@ from typing import List, Optional
 from datetime import datetime
 import os
 import json
+import asyncio
+import time
 
 try:
     import httpx
@@ -24,69 +26,152 @@ class HeartbeatPayload(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now)
 
 
+class HeartbeatManager:
+    """Async heartbeat manager that periodically pings the OpenClaw endpoint.
+
+    Provides start/stop and status helpers for other components.
+    """
+
+    def __init__(self, endpoint: Optional[str], interval: int = 60, token_env: str = "CLAW_AUTH_TOKEN"):
+        self.endpoint = endpoint
+        self.interval = interval
+        self._task: Optional[asyncio.Task] = None
+        self._client: Optional[httpx.AsyncClient] = None
+        self._alive = False
+        self._last_seen: Optional[float] = None
+        self._running = False
+        self._consecutive_failures = 0
+        self._token_env = token_env
+
+    @property
+    def is_alive(self) -> bool:
+        return self._alive
+
+    @property
+    def last_seen(self) -> Optional[float]:
+        return self._last_seen
+
+    async def _ping_once(self):
+        if not self.endpoint or httpx is None:
+            # simulation: mark alive and set last_seen
+            self._alive = True
+            self._last_seen = time.time()
+            return
+
+        if self._client is None:
+            self._client = httpx.AsyncClient(timeout=5.0)
+
+        token = os.getenv(self._token_env)
+        headers = {"Authorization": f"Bearer {token}"} if token else {}
+
+        try:
+            url = self.endpoint
+            # ensure /heartbeat path
+            if not url.endswith("/heartbeat"):
+                url = url.rstrip("/") + "/heartbeat"
+
+            resp = await self._client.post(url, json={}, headers=headers)
+            resp.raise_for_status()
+            self._alive = True
+            self._last_seen = time.time()
+            self._consecutive_failures = 0
+        except Exception:
+            self._consecutive_failures += 1
+            self._alive = False
+
+    async def _loop(self):
+        self._running = True
+        backoff = 1
+        max_backoff = min(30, self.interval)
+        try:
+            while self._running:
+                await self._ping_once()
+                if self._alive:
+                    backoff = 1
+                    await asyncio.sleep(self.interval)
+                else:
+                    # exponential backoff on failures
+                    await asyncio.sleep(backoff)
+                    backoff = min(max_backoff, backoff * 2)
+        finally:
+            self._running = False
+
+    def start(self):
+        if self._task and not self._task.done():
+            return
+        loop = asyncio.get_event_loop()
+        self._task = loop.create_task(self._loop())
+
+    def stop(self):
+        self._running = False
+        if self._task and not self._task.done():
+            self._task.cancel()
+
+
 class ClawIntegrationSkill(ChimeraSkill):
+    def __init__(self):
+        super().__init__()
+        self._hb_manager: Optional[HeartbeatManager] = None
+
     @property
     def name(self) -> str:
         return "claw_integration"
 
     async def execute(self, input_data: ClawHeartbeatInput) -> HeartbeatPayload:
-        """
-        If `CLAW_ENDPOINT` env var is set and `input_data.simulate` is False,
-        attempt a local POST to the endpoint. Otherwise return a simulated
-        `HeartbeatPayload` (safe demo mode).
+        """Return a heartbeat payload; this is a single-call helper (keeps compatibility).
+
+        For continuous background heartbeats, use `start_heartbeat()` / `stop_heartbeat()`.
         """
         endpoint = os.getenv("CLAW_ENDPOINT")
         payload = HeartbeatPayload()
 
-        if endpoint and (not input_data.simulate):
-            if httpx is None:
-                raise RuntimeError("httpx is required for live CLAW_ENDPOINT calls")
-            token = os.getenv("CLAW_AUTH_TOKEN")
-            headers = {"Authorization": f"Bearer {token}"} if token else {}
+        # If simulation requested or no endpoint, return simulated payload
+        if input_data.simulate or not endpoint:
+            return payload
+
+        # Try an async POST probe
+        if httpx is None:
+            raise RuntimeError("httpx is required for live CLAW_ENDPOINT calls")
+
+        token = os.getenv("CLAW_AUTH_TOKEN")
+        headers = {"Authorization": f"Bearer {token}"} if token else {}
+
+        async with httpx.AsyncClient(timeout=3.0) as client:
             try:
-                # 1. Attempt Standard POST Heartbeat
-                resp = httpx.post(endpoint, content=payload.model_dump_json(), headers=headers, timeout=2.0)
+                resp = await client.post(endpoint, json=payload.model_dump(), headers=headers)
                 resp.raise_for_status()
                 data = resp.json()
-                print(f"✅ [LIVE] Successfully synced with OpenClaw Node at {endpoint}")
                 return HeartbeatPayload(**{**payload.model_dump(), **data})
-
-            except Exception as post_error:
-                # 2. Fallback: Try GET Status (Probe) if POST fails (e.g. we are talking to a Control Node)
+            except Exception:
+                # fallback: try a GET probe
                 try:
-                    # Remove /heartbeat if present for the GET probe
                     base_endpoint = endpoint.replace("/heartbeat", "")
-                    resp = httpx.get(base_endpoint, headers=headers, timeout=2.0)
+                    resp = await client.get(base_endpoint, headers=headers)
                     resp.raise_for_status()
                     data = resp.json()
-                    
-                    # Log success and map real data to our payload
-                    print(f"✅ [LIVE] Connected to OpenClaw Control Plane at {base_endpoint}")
-                    print(f"   > Remote Status: Enabled={data.get('enabled')}, Running={data.get('running')}")
-                    
-                    # Update payload with real network status
                     payload.status = f"active_node (running={data.get('running')})"
                     if data.get('cdpUrl'):
-                         payload.endpoint = data.get('cdpUrl')  # Real specialized endpoint
-                    
+                        payload.endpoint = data.get('cdpUrl')
                     return payload
-                except Exception as get_error:
-                     print(f"⚠️ [LIVE] Integration Warning: POST failed ({post_error}) AND GET failed ({get_error}). Falling back to local signature.")
-                     return payload
-                
-            except Exception as e:
-                print(f"⚠️ [LIVE] Connection Failed: {e}. Falling back to local signature.")
-                return payload
+                except Exception:
+                    return payload
 
-        return payload
+    def start_heartbeat(self, interval: int = 60):
+        endpoint = os.getenv("CLAW_ENDPOINT")
+        if self._hb_manager is None:
+            self._hb_manager = HeartbeatManager(endpoint=endpoint, interval=interval)
+        self._hb_manager.start()
+
+    def stop_heartbeat(self):
+        if self._hb_manager:
+            self._hb_manager.stop()
+
+    def heartbeat_status(self) -> dict:
+        if not self._hb_manager:
+            return {"running": False, "alive": False}
+        return {"running": self._hb_manager._running, "alive": self._hb_manager.is_alive, "last_seen": self._hb_manager.last_seen}
 
     def _sign_payload(self, payload: dict) -> str:
-        """Create a simple deterministic signature placeholder.
-
-        In production this should use a real keypair/signing method.
-        We include the `CLAW_AUTH_TOKEN` in the HMAC if present to demonstrate
-        a signed payload for the control plane.
-        """
         try:
             import hashlib
             token = os.getenv("CLAW_AUTH_TOKEN", "")
@@ -98,9 +183,7 @@ class ClawIntegrationSkill(ChimeraSkill):
     async def publish(self, title: str, body: str) -> dict:
         """Attempt to publish content to the OpenClaw node.
 
-        This method tries several common publish endpoints and falls back
-        safely to a local simulation response. It returns a dict with
-        `status` and `response` keys to make assertions easy in tests.
+        Falls back to simulated response if publishing is not available.
         """
         endpoint = os.getenv("CLAW_ENDPOINT")
         token = os.getenv("CLAW_AUTH_TOKEN")
@@ -117,67 +200,24 @@ class ClawIntegrationSkill(ChimeraSkill):
         if not endpoint or httpx is None:
             return {"status": "simulated", "response": payload}
 
-        # Try a list of common publish paths
-        # First, attempt to discover a publish URL from the control plane root
-        try:
-            base = endpoint.rstrip("/")
-            probe = httpx.get(base, headers=headers, timeout=2.0)
-            try:
-                info = probe.json()
-            except Exception:
-                info = None
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            # try direct publish candidates
+            candidates = [
+                endpoint.rstrip("/") + "/publish",
+                endpoint.rstrip("/") + "/posts",
+                endpoint.rstrip("/") + "/api/publish",
+                endpoint.rstrip("/") + "/api/posts",
+            ]
+            for url in candidates:
+                try:
+                    resp = await client.post(url, json=payload, headers=headers)
+                    if resp.status_code in (200, 201):
+                        try:
+                            data = resp.json()
+                        except Exception:
+                            data = {"raw": resp.text}
+                        return {"status": "ok", "response": data, "url": url}
+                except Exception:
+                    continue
 
-            if isinstance(info, dict):
-                # Look for fields that might indicate a publish endpoint
-                for key in ("publishUrl", "publish_url", "postsUrl", "controlUrl", "cdpUrl", "control_url"):
-                    if key in info and info[key]:
-                        candidate = info[key]
-                        # if it's a base control URL, try common subpaths
-                        if candidate.endswith("/"):
-                            candidate = candidate.rstrip("/")
-                        pub_candidates = [candidate, candidate + "/publish", candidate + "/posts", candidate + "/api/publish"]
-                        for url in pub_candidates:
-                            try:
-                                resp = httpx.post(url, json=payload, headers=headers, timeout=3.0)
-                                if resp.status_code in (200, 201):
-                                    try:
-                                        data = resp.json()
-                                    except Exception:
-                                        data = {"raw": resp.text}
-                                    print(f"✅ [PUBLISH] Successfully posted to {url} (status={resp.status_code})")
-                                    return {"status": "ok", "response": data, "url": url}
-                                else:
-                                    print(f"⚠️ [PUBLISH] {url} returned {resp.status_code}")
-                            except Exception as e:
-                                print(f"⚠️ [PUBLISH] Failed to POST to {url}: {e}")
-
-        except Exception:
-            # ignore probe failures and fallback to brute candidates below
-            pass
-
-        # Try a list of common publish paths relative to the configured endpoint
-        candidates = [
-            endpoint.rstrip("/") + "/publish",
-            endpoint.rstrip("/") + "/posts",
-            endpoint.rstrip("/") + "/api/publish",
-            endpoint.rstrip("/") + "/api/posts",
-        ]
-
-        for url in candidates:
-            try:
-                resp = httpx.post(url, json=payload, headers=headers, timeout=3.0)
-                if resp.status_code in (200, 201):
-                    try:
-                        data = resp.json()
-                    except Exception:
-                        data = {"raw": resp.text}
-                    print(f"✅ [PUBLISH] Successfully posted to {url} (status={resp.status_code})")
-                    return {"status": "ok", "response": data, "url": url}
-                else:
-                    print(f"⚠️ [PUBLISH] {url} returned {resp.status_code}")
-            except Exception as e:
-                # Try next candidate
-                print(f"⚠️ [PUBLISH] Failed to POST to {url}: {e}")
-
-        # If all publish attempts fail, return simulated result
         return {"status": "fallback", "response": payload}

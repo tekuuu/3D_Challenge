@@ -109,9 +109,14 @@ async def main():
     print_slow(f"{BOLD}[SUCCESS] Agent is broadcasting to the OpenClaw Network.{RESET}")
 
     # Try a small publish to demonstrate real integration
-    print_slow(f"{CYAN}[*] Attempting to publish a demo post to OpenClaw...{RESET}")
-    pub = await skill.publish("Demo: Chimera Live Post", "This is an automated demo post from Chimera during the Day 3 recording.")
-    print(f"\nPublish Result: {pub}\n")
+    # Publishing is disabled by default. To publish, set PUBLISH_SAMPLE=true
+    # and ensure `CLAW_ENDPOINT` and `CLAW_AUTH_TOKEN` are configured securely.
+    if os.getenv("PUBLISH_SAMPLE", "false").lower() in ("1", "true", "yes"):
+        print_slow(f"{CYAN}[*] Attempting to publish a sample post to OpenClaw...{RESET}")
+        pub = await skill.publish("Chimera: Sample Post", "This is a sample post from Chimera.")
+        print(f"\nPublish Result: {pub}\n")
+    else:
+        print_slow(f"{YELLOW}[*] Publishing is disabled (PUBLISH_SAMPLE not set).{RESET}")
 
 if __name__ == "__main__":
     asyncio.run(main())
