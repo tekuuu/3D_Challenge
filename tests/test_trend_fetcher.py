@@ -1,5 +1,6 @@
 import pytest
-from schemas.contracts import SkillTrendOutput
+import asyncio
+from schemas.contracts import SkillTrendOutput, SkillTrendInput
 from skills.skill_trend_fetcher import TrendFetcherSkill
 
 

@@ -22,6 +22,9 @@ class Judge:
             for w in self.FORBIDDEN_WORDS:
                 if re.search(r"\b" + re.escape(w) + r"\b", lowered):
                     task.status = TaskStatus.FAILED
+                    # attach moderation error detail to payload for diagnostics
+                    if isinstance(task.payload, dict):
+                        task.payload.setdefault("error", f"SOUL violation: forbidden word '{w}'")
                     return task
 
             # confidence-based approval
